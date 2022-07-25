@@ -1,0 +1,98 @@
+---
+document: modulemd-defaults
+version: 1
+data:
+  module: satellite-5-client
+  stream: 1.0
+  profiles:
+    1.0: [common]
+...
+---
+document: modulemd
+version: 2
+data:
+  name: satellite-5-client
+  stream: 1.0
+  version: 8010020191114035551
+  context: cdc1202b
+  arch: x86_64
+  summary: Red Hat Satellite 5 client packages
+  description: >-
+    Red Hat Satellite 5 client packages provide programs and libraries to allow your
+    system to receive software updates from Red Hat Satellite 5.
+  license:
+    module:
+    - MIT
+    content:
+    - GPLv2
+  dependencies:
+  - buildrequires:
+      platform: [el8.1.0]
+    requires:
+      platform: [el8]
+  references:
+    community: https://github.com/spacewalkproject/spacewalk/
+    documentation: https://access.redhat.com/documentation/en-us/red_hat_satellite/5.8/
+    tracker: https://bugzilla.redhat.com/
+  profiles:
+    common:
+      rpms:
+      - dnf-plugin-spacewalk
+      - rhn-client-tools
+      - rhn-setup
+      - rhnlib
+      - rhnsd
+    gui:
+      rpms:
+      - dnf-plugin-spacewalk
+      - rhn-client-tools
+      - rhn-setup
+      - rhn-setup-gnome
+      - rhnlib
+      - rhnsd
+  components:
+    rpms:
+      dnf-plugin-spacewalk:
+        rationale: DNF plugin for communication with Red Hat Satellite 5.
+        ref: e77f0511edd95a5c5e391d2599b8d1a4161690dd
+        buildorder: 10
+        arches: [aarch64, i686, ppc64le, x86_64]
+      rhn-client-tools:
+        rationale: Binaries to allow system to receive software updates from Red Hat
+          Satellite 5.
+        ref: 6b6cbe731f7a7c466f5b008a5dcc22e0d0856011
+        buildorder: 10
+        arches: [aarch64, i686, ppc64le, x86_64]
+      rhnlib:
+        rationale: Libraries to allow system to receive software updates from Red
+          Hat Satellite 5.
+        ref: 893c2b1845bb7d9e7f99ac65159ebc9bd1cc6945
+        buildorder: 10
+        arches: [aarch64, i686, ppc64le, x86_64]
+      rhnsd:
+        rationale: Red Hat Satellite update agent.
+        ref: 062feb09b53484176b377d0aaa7302cb274d178b
+        buildorder: 10
+        arches: [aarch64, i686, ppc64le, x86_64]
+  artifacts:
+    rpms:
+    - dnf-plugin-spacewalk-0:2.8.5-11.module_el8.1.0+211+ad6c0bc7.noarch
+    - dnf-plugin-spacewalk-0:2.8.5-11.module_el8.1.0+211+ad6c0bc7.src
+    - python3-dnf-plugin-spacewalk-0:2.8.5-11.module_el8.1.0+211+ad6c0bc7.noarch
+    - python3-rhn-check-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - python3-rhn-client-tools-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - python3-rhn-setup-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - python3-rhn-setup-gnome-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - python3-rhnlib-0:2.8.6-8.module_el8.1.0+211+ad6c0bc7.noarch
+    - rhn-check-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhn-client-tools-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.src
+    - rhn-client-tools-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhn-setup-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhn-setup-gnome-0:2.8.16-13.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhnlib-0:2.8.6-8.module_el8.1.0+211+ad6c0bc7.noarch
+    - rhnlib-0:2.8.6-8.module_el8.1.0+211+ad6c0bc7.src
+    - rhnsd-0:5.0.35-3.module_el8.1.0+211+ad6c0bc7.src
+    - rhnsd-0:5.0.35-3.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhnsd-debuginfo-0:5.0.35-3.module_el8.1.0+211+ad6c0bc7.x86_64
+    - rhnsd-debugsource-0:5.0.35-3.module_el8.1.0+211+ad6c0bc7.x86_64
+...

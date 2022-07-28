@@ -164,7 +164,14 @@ EOF
     cp $_iso_base_dir/isolinux/isolinux.bin linux-iso/
     cp $_iso_base_dir/isolinux/vesamenu.c32 linux-iso/
     cp $_iso_base_dir/isolinux/vmlinuz linux-iso/
-    echo "default vmlinuz initrd=rootfs.gz" > linux-iso/isolinux.cfg
+    # echo "default vmlinuz initrd=rootfs.gz" > linux-iso/isolinux.cfg
+    cat > linux-iso/isolinux.cfg <<EOF
+default vesamenu.c32
+timeout 50
+label Cute Linux
+    kernel vmlinuz
+    append initrd=rootfs.gz
+EOF
 
     [ -e $_iso_name ] && rm -f $_iso_name
     pushd linux-iso

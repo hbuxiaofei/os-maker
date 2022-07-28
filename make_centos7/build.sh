@@ -168,9 +168,10 @@ EOF
     cat > linux-iso/isolinux.cfg <<EOF
 default vesamenu.c32
 timeout 50
+menu clear
 label Cute Linux
     kernel vmlinuz
-    append initrd=rootfs.gz
+    append initrd=rootfs.gz vga=792
 EOF
 
     [ -e $_iso_name ] && rm -f $_iso_name

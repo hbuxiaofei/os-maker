@@ -13,6 +13,7 @@ Usage: $EXEC_NAME <command> [args...]
   command:
     base        Prepare base iso
     mkiso       Only make iso from iso base directory
+    mkcute      Only make cute iso from iso base directory
   args:
     -h, --help  Show this help message
     -i, --iso   Input iso file, using for making base
@@ -21,6 +22,7 @@ Example:
   $EXEC_NAME mkiso
   $EXEC_NAME base --iso=input.iso
   $EXEC_NAME mkiso --out=iso
+  $EXEC_NAME mkcute --out=iso
 EOF
 }
 
@@ -121,12 +123,62 @@ function do_mkisofs()
     implantisomd5 $_iso_name
 }
 
+function do_mkcute()
+{
+    local _iso_name=$1
+    local _iso_base_dir=$ISO_BASE_DIR
+
+    if [ ! -d busybox ]; then
+        git clone https://github.com/mirror/busybox.git -b 1_35_0
+    fi
+
+    [ ! -e busybox/.config ] && cp -f busybox.config busybox/.config
+    pushd busybox
+        [ ! -d _install ] && make install
+        [ -d rootfs ] && rm -rf rootfs
+        [ -e rootfs.gz ] && rm -rf rootfs.gz
+        mkdir rootfs
+        cp -rf _install/* rootfs/
+        pushd rootfs
+            mkdir -p {etc/init.d,dev,proc,sys}
+            cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/
+            rm -f linuxrc
+            cat > init <<EOF
+#!/bin/busybox sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+exec /sbin/init
+EOF
+            chmod a+x init
+            cat > etc/init.d/rcS <<EOF
+echo -e "Welcome to Cute Linux"
+EOF
+            chmod a+x etc/init.d/rcS
+            find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../rootfs.gz
+        popd
+    popd
+    [ -d linux-iso ] && rm -rf linux-iso
+    mkdir linux-iso
+
+    cp busybox/rootfs.gz linux-iso/
+    cp $_iso_base_dir/isolinux/isolinux.bin linux-iso/
+    cp $_iso_base_dir/isolinux/vesamenu.c32 linux-iso/
+    cp $_iso_base_dir/isolinux/vmlinuz linux-iso/
+    echo "default vmlinuz initrd=rootfs.gz" > linux-iso/isolinux.cfg
+
+    [ -e $_iso_name ] && rm -f $_iso_name
+    pushd linux-iso
+        xorriso -as mkisofs -o ../$_iso_name -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ./
+    popd
+}
+
 if [ "X$ARGS_EXP" == "Xbase" ]; then
     make_iso_base "$ARG_INPUT_ISO"
 elif [ "X$ARGS_EXP" == "Xmkiso" ]; then
     do_mkisofs "$ARG_OUT_ISO" "$ISO_BASE_DIR"
+elif [ "X$ARGS_EXP" == "Xmkcute" ]; then
+    do_mkcute "$ARG_OUT_ISO"
 else
     echo "[Err] Args unknown: $ARGS_EXP"
     do_usage
 fi
-

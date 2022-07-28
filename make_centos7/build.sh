@@ -168,7 +168,8 @@ EOF
 
     [ -e $_iso_name ] && rm -f $_iso_name
     pushd linux-iso
-        xorriso -as mkisofs -o ../$_iso_name -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ./
+        # xorriso -as mkisofs -o ../$_iso_name -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table ./
+        mkisofs -R -b isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table -o ../$_iso_name ./
     popd
 }
 

@@ -83,10 +83,19 @@ function make_prepare()
     popd
 }
 
+function make_drivers()
+{
+    local _install_dir="$1"
+    make
+    find drivers -name "*.ko" | xargs -i cp --parents {} $_install_dir
+    find drivers -name "*-test" | xargs -i cp --parents {} $_install_dir
+}
+
 function do_mkcute()
 {
     local _iso_name=$1
     local _mod_code_dir=$MOD_CODE_DIR
+    local _kernel_version="xxx"
 
     make_prepare
 
@@ -108,21 +117,39 @@ function do_mkcute()
 
     [ ! -e $_mod_code_dir/kernel/.config ] && cp -f kernel.config $_mod_code_dir/kernel/.config
     pushd $_mod_code_dir/kernel
-        [ ! -e arch/x86/boot/bzImage ] && make -j $NR_CPU bzImage
+        [ ! -e arch/x86/boot/bzImage ] && LOCALVERSION= make -j $NR_CPU bzImage
     popd
 
+    _kernel_version=$(cat $_mod_code_dir/kernel/include/config/kernel.release 2> /dev/null)
+
     pushd $_mod_code_dir/busybox/rootfs
-        mkdir -p {etc/init.d,dev,proc,sys}
+        mkdir -p lib/modules/${_kernel_version}/kernel
+    popd
+
+    make_drivers "$_mod_code_dir/busybox/rootfs/lib/modules/${_kernel_version}/kernel/"
+
+    pushd $_mod_code_dir/busybox/rootfs
+        mkdir -p {etc/init.d,dev,proc,sys,tmp}
         cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/
         rm -f linuxrc
+        cat > etc/fstab <<EOF
+proc      /proc    proc      defaults    0        0
+tmpfs     /tmp     tmpfs     defaults    0        0
+sysfs     /sys     sysfs     defaults    0        0
+EOF
         cat > init <<EOF
 #!/bin/busybox sh
-mount -t proc none /proc
-mount -t sysfs none /sys
 exec /sbin/init
 EOF
         chmod a+x init
         cat > etc/init.d/rcS <<EOF
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib:/usr/lib
+export LD_LIBRARY_PATH
+mount -a
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+/sbin/mdev -s
 echo -e "Welcome to Cute Linux"
 EOF
         chmod a+x etc/init.d/rcS

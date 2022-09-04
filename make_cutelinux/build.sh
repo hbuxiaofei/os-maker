@@ -85,10 +85,81 @@ function make_prepare()
 
 function make_drivers()
 {
-    local _install_dir="$1"
+    local _kernel_dir="$1"
+    local _install_dir="${_kernel_dir}/kernel/"
     make
     find drivers -name "*.ko" | xargs -i cp --parents {} $_install_dir
     find drivers -name "*-test" | xargs -i cp --parents {} $_install_dir
+
+    pushd $_mod_code_dir/kernel
+        find drivers -name "virtio.ko" | xargs -i cp --parents {} $_install_dir
+        find drivers -name "virtio_pci.ko" | xargs -i cp --parents {} $_install_dir
+        find drivers -name "virtio_ring.ko" | xargs -i cp --parents {} $_install_dir
+        find drivers -name "virtio_scsi.ko" | xargs -i cp --parents {} $_install_dir
+        find drivers -name "virtio_blk.ko" | xargs -i cp --parents {} $_install_dir
+    popd
+
+    # pushd $_mod_code_dir/kernel
+    #     cp -f modules.builtin ${_kernel_dir}/
+    #     cp -f modules.order ${_kernel_dir}/
+    #     cp -f Module.symvers ${_kernel_dir}/
+    #     cp -f System.map ${_kernel_dir}/
+    # popd
+}
+
+function install_bin()
+{
+    local _rootfs_dir=$1
+    pushd $_rootfs_dir
+        while read _bin; do
+            [ -z "$_bin" ] && continue
+            if [ ! -e "$_bin" ]; then
+                echo "[Warn] file $_bin not found" >&2
+                continue
+            fi
+            _bin_dir="${_bin%/*}"
+            _bin_dir="${_bin_dir#*/}"
+            [ -z "$_bin_dir" ] && continue
+            [ ! -d "$_bin_dir" ] && mkdir -p $_bin_dir
+            cp -f ${_bin} ${_bin_dir}/
+        done << EOF
+/lib64/ld-linux-x86-64.so.2
+/lib64/libc.so.6
+/lib64/libm.so.6
+/lib64/libresolv.so.2
+/lib64/libtinfo.so.5
+/lib64/libdl.so.2
+/lib64/libblkid.so.1
+/lib64/libmount.so.1
+/lib64/libuuid.so.1
+/lib64/libselinux.so.1
+/lib64/libudev.so.1
+/lib64/libpcre.so.1
+/lib64/librt.so.1
+/lib64/libcap.so.2
+/lib64/libdw.so.1
+/lib64/libgcc_s.so.1
+/lib64/libpthread.so.0
+/lib64/libattr.so.1
+/lib64/libelf.so.1
+/lib64/libz.so.1
+/lib64/liblzma.so.5
+/lib64/libbz2.so.1
+/lib64/libpci.so.3
+/lib64/libkmod.so.2
+/usr/lib64/libmagic.so.1
+
+/sbin/lspci
+/bin/ldd
+/bin/lsblk
+/bin/bash
+/usr/bin/bash
+/usr/bin/file
+
+/usr/share/misc/magic
+/usr/share/misc/magic.mgc
+EOF
+    popd
 }
 
 function do_mkcute()
@@ -126,12 +197,20 @@ function do_mkcute()
         mkdir -p lib/modules/${_kernel_version}/kernel
     popd
 
-    make_drivers "$_mod_code_dir/busybox/rootfs/lib/modules/${_kernel_version}/kernel/"
+    install_bin "$_mod_code_dir/busybox/rootfs"
+
+    make_drivers "$_mod_code_dir/busybox/rootfs/lib/modules/${_kernel_version}"
 
     pushd $_mod_code_dir/busybox/rootfs
         mkdir -p {etc/init.d,dev,proc,sys,tmp}
         cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/
         rm -f linuxrc
+        cat > etc/inittab <<EOF
+::sysinit:/etc/init.d/rcS
+::respawn:-/bin/bash
+tty2::askfirst:-/bin/bash
+tty3::askfirst:-/bin/bash
+EOF
         cat > etc/fstab <<EOF
 proc      /proc    proc      defaults    0        0
 tmpfs     /tmp     tmpfs     defaults    0        0

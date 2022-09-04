@@ -3,7 +3,7 @@
 set -e
 
 EXEC_NAME="build.sh"
-NR_CPU=`grep -c ^processor /proc/cpuinfo`
+NR_CPU=`grep -c ^processor /proc/cpuinfo 2>/dev/null`
 IN_ARGS=`getopt -o ho: --long help,out: -n 'build.sh' -- "$@"`
 GETOPT_RET=$?
 
@@ -78,7 +78,7 @@ function make_prepare()
             git clone https://github.com/mirror/busybox.git -b 1_35_0
         fi
         if [ ! -d kernel ]; then
-            git clone https://github.com/hbuxiaofei/linux-2.6.38-study.git kernel
+            git clone https://github.com/hbuxiaofei/linux-2.6.38-study.git -b 3.10 kernel
         fi
     popd
 }
@@ -186,7 +186,7 @@ function do_mkcute()
         cp -rf _install/* rootfs/
     popd
 
-    [ ! -e $_mod_code_dir/kernel/.config ] && cp -f kernel.config $_mod_code_dir/kernel/.config
+    [ ! -e $_mod_code_dir/kernel/.config ] && cp -f kernel3.10.config $_mod_code_dir/kernel/.config
     pushd $_mod_code_dir/kernel
         [ ! -e arch/x86/boot/bzImage ] && LOCALVERSION= make -j $NR_CPU bzImage
     popd

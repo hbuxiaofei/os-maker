@@ -208,7 +208,8 @@ function do_mkcute()
         rm -f linuxrc
         cat > etc/inittab <<EOF
 ::sysinit:/etc/init.d/rcS
-::respawn:-/bin/bash
+ttyS0::respawn:-/bin/bash
+tty1::respawn:-/bin/sh
 tty2::askfirst:-/bin/bash
 tty3::askfirst:-/bin/bash
 EOF
@@ -250,7 +251,7 @@ timeout 50
 menu clear
 label Cute Linux
     kernel bzImage
-    append initrd=rootfs.gz quiet splash
+    append initrd=rootfs.gz quiet splash console=tty1
 EOF
 
     cp $_mod_code_dir/kernel/arch/x86/boot/bzImage linux-iso/

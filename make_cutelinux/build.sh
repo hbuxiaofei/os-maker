@@ -100,10 +100,10 @@ function make_drivers()
     popd
 
     # pushd $_mod_code_dir/kernel
-    #     cp -f modules.builtin ${_kernel_dir}/
-    #     cp -f modules.order ${_kernel_dir}/
-    #     cp -f Module.symvers ${_kernel_dir}/
-    #     cp -f System.map ${_kernel_dir}/
+    #   [ -e modules.builtin ] && cp -f modules.builtin ${_kernel_dir}/
+    #   [ -e modules.order ] && cp -f modules.order ${_kernel_dir}/
+    #   [ -e Module.symvers ] && cp -f Module.symvers ${_kernel_dir}/
+    #   [ -e System.map ] && cp -f System.map ${_kernel_dir}/
     # popd
 }
 
@@ -150,6 +150,7 @@ function install_bin()
 /usr/lib64/libmagic.so.1
 
 /sbin/lspci
+/usr/sbin/depmod
 /bin/ldd
 /bin/lsblk
 /bin/bash
@@ -229,7 +230,9 @@ mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 echo /sbin/mdev > /proc/sys/kernel/hotplug
 /sbin/mdev -s
-echo -e "Welcome to Cute Linux"
+/usr/bin/clear
+# /usr/sbin/depmod -a
+echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
         chmod a+x etc/init.d/rcS
         find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../rootfs.gz
@@ -247,7 +250,7 @@ timeout 50
 menu clear
 label Cute Linux
     kernel bzImage
-    append initrd=rootfs.gz vga=792
+    append initrd=rootfs.gz quiet splash
 EOF
 
     cp $_mod_code_dir/kernel/arch/x86/boot/bzImage linux-iso/

@@ -87,7 +87,7 @@ function make_drivers()
 {
     local _kernel_dir="$1"
     local _install_dir="${_kernel_dir}/kernel/"
-    make
+    make all-drivers
     find drivers -name "*.ko" | xargs -i cp --parents {} $_install_dir
     find drivers -name "*-test" | xargs -i cp --parents {} $_install_dir
 
@@ -105,6 +105,14 @@ function make_drivers()
     #   [ -e Module.symvers ] && cp -f Module.symvers ${_kernel_dir}/
     #   [ -e System.map ] && cp -f System.map ${_kernel_dir}/
     # popd
+}
+
+function make_tools()
+{
+    local _install_dir="$1/"
+    make all-tools
+    find tools -name "*.bin" | xargs -i cp --parents {} $_install_dir
+    find tools -name "*-test.sh" | xargs -i cp --parents {} $_install_dir
 }
 
 function install_bin()
@@ -201,6 +209,8 @@ function do_mkcute()
     install_bin "$_mod_code_dir/busybox/rootfs"
 
     make_drivers "$_mod_code_dir/busybox/rootfs/lib/modules/${_kernel_version}"
+
+    make_tools "$_mod_code_dir/busybox/rootfs/usr/sbin"
 
     pushd $_mod_code_dir/busybox/rootfs
         mkdir -p {etc/init.d,dev,proc,sys,tmp}

@@ -13,6 +13,7 @@
 /usr/libexec/qemu-kvm \
     -kernel linux-iso/bzImage \
     -initrd linux-iso/rootfs.gz \
+    -drive file=/var/lib/libvirt/images/disk.qcow2,if=virtio,media=disk,cache=directsync,format=qcow2 \
     -append "nokaslr console=ttyS0" \
     -vnc :0 \
     -smp 4  \

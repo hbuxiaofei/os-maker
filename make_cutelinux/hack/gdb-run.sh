@@ -10,6 +10,7 @@
 #
 # gdb可以直接添加command
 # gdb vmlinux -ex="target remote:1234" -ex="hb start_kernel"
+# gdb vmlinux -ex="target remote 10.253.8.82:1234" -ex="hb start_kernel"
 #
 
  /opt/gdb_7_6/bin/gdb .mod-code/kernel/vmlinux \

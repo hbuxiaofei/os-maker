@@ -11,12 +11,15 @@
 #
 
 /usr/libexec/qemu-kvm \
+    --enable-kvm \
+    -smp 2 \
+    -m 2048 \
     -kernel linux-iso/bzImage \
     -initrd linux-iso/rootfs.gz \
     -drive file=/var/lib/libvirt/images/disk.qcow2,if=virtio,media=disk,cache=directsync,format=qcow2 \
     -append "nokaslr console=ttyS0" \
+    -monitor telnet:0.0.0.0:4321,server,nowait \
     -vnc :0 \
-    -smp 4  \
     -serial stdio \
     -s \
     -S

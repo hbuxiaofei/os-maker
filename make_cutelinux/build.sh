@@ -97,6 +97,7 @@ function make_drivers()
         find drivers -name "virtio_ring.ko" | xargs -i cp --parents {} $_install_dir
         find drivers -name "virtio_scsi.ko" | xargs -i cp --parents {} $_install_dir
         find drivers -name "virtio_blk.ko" | xargs -i cp --parents {} $_install_dir
+        find drivers -name "e1000.ko" | xargs -i cp --parents {} $_install_dir
     popd
 
     # pushd $_mod_code_dir/kernel
@@ -155,7 +156,11 @@ function install_bin()
 /lib64/libbz2.so.1
 /lib64/libpci.so.3
 /lib64/libkmod.so.2
+/lib64/libutil.so.1
+/lib64/libbfd-2.27-44.base.el7.so
+/lib64/libopcodes-2.27-44.base.el7.so
 /usr/lib64/libmagic.so.1
+/usr/lib64/libdl.so.2
 
 /sbin/lspci
 /usr/sbin/depmod
@@ -164,6 +169,12 @@ function install_bin()
 /bin/bash
 /usr/bin/bash
 /usr/bin/file
+/usr/bin/gcc
+/usr/bin/ld
+/usr/bin/ar
+/usr/bin/as
+/usr/bin/make
+/usr/bin/nvim
 
 /usr/share/misc/magic
 /usr/share/misc/magic.mgc
@@ -213,20 +224,30 @@ function do_mkcute()
     make_tools "$_mod_code_dir/busybox/rootfs/usr/sbin"
 
     pushd $_mod_code_dir/busybox/rootfs
-        mkdir -p {etc/init.d,dev,proc,sys,tmp}
+        mkdir -p {etc/init.d,etc/network,dev,proc,sys,tmp}
+        mkdir -p usr/share/udhcpc
+        cp $_mod_code_dir/busybox/examples/udhcp/simple.script usr/share/udhcpc/default.script
+        chmod +x usr/share/udhcpc/default.script
         cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/
         rm -f linuxrc
         cat > etc/inittab <<EOF
 ::sysinit:/etc/init.d/rcS
-ttyS0::respawn:-/bin/bash
+ttyS0::respawn:-/bin/sh
 tty1::respawn:-/bin/sh
 tty2::askfirst:-/bin/bash
 tty3::askfirst:-/bin/bash
+EOF
+        cat > etc/passwd <<EOF
+root::0:0:root:/:/bin/sh
 EOF
         cat > etc/fstab <<EOF
 proc      /proc    proc      defaults    0        0
 tmpfs     /tmp     tmpfs     defaults    0        0
 sysfs     /sys     sysfs     defaults    0        0
+EOF
+        cat > etc/network/interfaces <<EOF
+auto eth0
+iface eth0 inet dhcp
 EOF
         cat > init <<EOF
 #!/bin/busybox sh
@@ -242,7 +263,9 @@ mount -t devpts devpts /dev/pts
 echo /sbin/mdev > /proc/sys/kernel/hotplug
 /sbin/mdev -s
 /usr/bin/clear
-# /usr/sbin/depmod -a
+/usr/sbin/depmod -a
+udhcpc
+telnetd
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
         chmod a+x etc/init.d/rcS

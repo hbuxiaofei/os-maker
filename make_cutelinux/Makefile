@@ -18,18 +18,21 @@ all-drivers:
 	# $(MAKE) -C $(KDIR) M=drivers/virtio modules
 	# $(MAKE) -C $(KDIR) M=drivers/scsi modules
 	# $(MAKE) -C $(KDIR) M=drivers/block modules
+	# $(MAKE) -C $(KDIR) M=drivers/net modules
+	$(MAKE) -C $(KDIR) M=drivers/net/ethernet/intel/e1000 modules
 
 clean-drivers:
-	make -C drivers clean
-	make -C $(KDIR) M=drivers/virtio clean
-	make -C $(KDIR) M=drivers/scsi clean
-	make -C $(KDIR) M=drivers/block clean
+	$(MAKE) -C drivers clean
+	$(MAKE) -C $(KDIR) M=drivers/virtio clean
+	$(MAKE) -C $(KDIR) M=drivers/scsi clean
+	$(MAKE) -C $(KDIR) M=drivers/block clean
+	$(MEKE) -C $(KDIR) M=drivers/net/ethernet/intel/e1000 clean
 
 all-tools:
 	$(MAKE) -C tools
 
 clean-tools:
-	make -C tools clean
+	$(MAKE) -C tools clean
 
 
 export KDIR

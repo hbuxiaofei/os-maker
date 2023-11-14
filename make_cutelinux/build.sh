@@ -159,6 +159,8 @@ function install_bin()
 /lib64/libutil.so.1
 /lib64/libbfd-2.27-44.base.el7.so
 /lib64/libopcodes-2.27-44.base.el7.so
+/lib64/libpopt.so.0
+/lib64/libacl.so.1
 /usr/lib64/libmagic.so.1
 /usr/lib64/libdl.so.2
 
@@ -175,6 +177,7 @@ function install_bin()
 /usr/bin/as
 /usr/bin/make
 /usr/bin/nvim
+/usr/bin/rsync
 
 /usr/share/misc/magic
 /usr/share/misc/magic.mgc
@@ -245,6 +248,16 @@ proc      /proc    proc      defaults    0        0
 tmpfs     /tmp     tmpfs     defaults    0        0
 sysfs     /sys     sysfs     defaults    0        0
 EOF
+        cat > etc/rsyncd.conf <<EOF
+uid = 0
+gid = 0
+port 873
+fake super = yes
+[share]
+    path = /tmp
+    read only = no
+    comment = rsync share
+EOF
         cat > etc/network/interfaces <<EOF
 auto eth0
 iface eth0 inet dhcp
@@ -264,8 +277,10 @@ echo /sbin/mdev > /proc/sys/kernel/hotplug
 /sbin/mdev -s
 /usr/bin/clear
 /usr/sbin/depmod -a
+modprobe e1000
 udhcpc
 telnetd
+rsync --daemon
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
         chmod a+x etc/init.d/rcS

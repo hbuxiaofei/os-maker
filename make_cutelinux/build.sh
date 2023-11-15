@@ -160,6 +160,9 @@ function install_bin()
 /lib64/libbfd-2.27-44.base.el7.so
 /lib64/libopcodes-2.27-44.base.el7.so
 /lib64/libpopt.so.0
+/lib64/libgmp.so.10
+/lib64/libmpfr.so.4
+/lib64/libmpc.so.3
 /lib64/libacl.so.1
 /usr/lib64/libmagic.so.1
 /usr/lib64/libdl.so.2
@@ -175,14 +178,29 @@ function install_bin()
 /usr/bin/ld
 /usr/bin/ar
 /usr/bin/as
+/usr/bin/objcopy
+/usr/bin/objdump
+/usr/bin/nasm
+/usr/bin/ndisasm
 /usr/bin/make
 /usr/bin/nvim
 /usr/bin/ctags
 /usr/bin/rsync
 
+/usr/include/stdc-predef.h
+
 /usr/share/misc/magic
 /usr/share/misc/magic.mgc
+
+/usr/share/nvim/runtime/syntax/syntax.vim
+/usr/share/nvim/runtime/syntax/asm.vim
+/usr/share/nvim/runtime/filetype.vim
+/usr/share/nvim/runtime/autoload/dist/ft.vim
 EOF
+        cc1_path=$(ls /usr/libexec/gcc/x86_64-redhat-linux/*/cc1 2>/dev/null | tail -n1)
+        if [ -n "$cc1_path" ]; then
+            [ -e "$cc1_path" ] && cp -f $cc1_path usr/bin/cc1
+        fi
     popd
 }
 
@@ -228,7 +246,7 @@ function do_mkcute()
     make_tools "$_mod_code_dir/busybox/rootfs/usr/sbin"
 
     pushd $_mod_code_dir/busybox/rootfs
-        mkdir -p {etc/init.d,etc/network,dev,proc,sys,tmp}
+        mkdir -p {etc/init.d,etc/rcS.d,etc/network,dev,proc,sys,tmp}
         mkdir -p usr/share/udhcpc
         cp $_mod_code_dir/busybox/examples/udhcp/simple.script usr/share/udhcpc/default.script
         chmod +x usr/share/udhcpc/default.script
@@ -252,7 +270,7 @@ EOF
         cat > etc/rsyncd.conf <<EOF
 uid = 0
 gid = 0
-port 873
+port = 873
 fake super = yes
 [share]
     path = /tmp
@@ -282,10 +300,52 @@ modprobe e1000
 udhcpc
 telnetd
 rsync --daemon
-[ -e /usr/bin/nvim ] && ln -s /usr/bin/nvim /usr/bin/vim
+exec /etc/init.d/rc S
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
         chmod a+x etc/init.d/rcS
+        cat > etc/init.d/rc <<EOF
+#!/bin/sh
+scriptname="\$0"
+runlevel=\$RUNLEVEL
+[ "\$1" != "" ] && runlevel=\$1
+if [ "\$runlevel" = "" ]; then
+    echo "Usage: \$scriptname <runlevel>" >&2
+    exit 1
+fi
+if [ -d /etc/rc\$runlevel.d ]; then
+    for s in /etc/rc\$runlevel.d/S*; do
+        /bin/sh \$s
+    done
+fi
+EOF
+        chmod a+x etc/init.d/rc
+        cat > etc/rcS.d/S30nvim <<EOF
+#!/bin/sh
+nvim_bin=\`which nvim 2>/dev/null\`
+[ -z "\$nvim_bin" ] && exit 0
+ln -s \$nvim_bin /usr/bin/vim
+mkdir -p /.config/nvim
+
+echo "syntax on
+set number
+set hlsearch
+set ignorecase
+set smartindent
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+set expandtab
+set colorcolumn=81
+hi ColorColumn ctermbg=darkgrey guibg=darkgrey
+set scrolloff=5
+set sidescrolloff=15
+set laststatus=2
+set encoding=utf-8
+set fileencoding=utf-8
+set completeopt=menu" > /.config/nvim/init.vim
+
+EOF
         find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../rootfs.gz
     popd
 

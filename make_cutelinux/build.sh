@@ -177,6 +177,7 @@ function install_bin()
 /usr/bin/as
 /usr/bin/make
 /usr/bin/nvim
+/usr/bin/ctags
 /usr/bin/rsync
 
 /usr/share/misc/magic
@@ -281,6 +282,7 @@ modprobe e1000
 udhcpc
 telnetd
 rsync --daemon
+[ -e /usr/bin/nvim ] && ln -s /usr/bin/nvim /usr/bin/vim
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
         chmod a+x etc/init.d/rcS

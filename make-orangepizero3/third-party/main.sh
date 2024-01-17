@@ -139,14 +139,19 @@ compile_code()
 
     pushd $_code_dir
         pushd arm-trusted-firmware
-            make CROSS_COMPILE="$_compiler_prefix" PLAT="$_plat" DEBUG=1 bl31 -j ${NR_CPU}
+            [ ! -e build/${_plat}/debug/bl31.bin ] && \
+               make CROSS_COMPILE="$_compiler_prefix" PLAT="$_plat" DEBUG=1 bl31 -j ${NR_CPU}
         popd
 
+        # make ARCH=arm CROSS_COMPILE=aarch64-none-linux-gnu- orangepi_zero3_defconfig
+        [ ! -e u-boot/.config ] && cp -f uboot.config u-boot/.config
         pushd u-boot
             [ ! -e u-boot-sunxi-with-spl.bin ] && \
                make ARCH=arm CROSS_COMPILE="$_compiler_prefix" BL31=../arm-trusted-firmware/build/${_plat}/debug/bl31.bin -j ${NR_CPU}
         popd
 
+	# orangepi-build/external/config/kernel/linux-6.1-sun50iw9-next.config
+	# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
         [ ! -e kernel/.config ] && cp -f kernel.config kernel/.config
         pushd kernel
             [ ! -e arch/arm64/boot/Image ] && \

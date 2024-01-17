@@ -57,14 +57,11 @@ cd $(dirname $0)
 TOP_DIR="${PWD}"
 MOD_CODE_DIR="${TOP_DIR}/.mod-code"
 
-VAR_CROSS_COMPILE="aarch64-none-linux-gnu-"
-VAR_CROSS_BIN="/usr/local/bin/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu/bin"
+VAR_CROSS_COMPILE="${G_CROSS_NAME}-"
+VAR_CROSS_DIR=${G_CROSS_DIR}
+VAR_CROSS_BIN="${VAR_CROSS_DIR}/bin"
 VAR_PLAT="sun50i_h616"
 VAR_PLAT_FULLNAME="sun50i-h616-orangepi-zero3"
-
-PATH=$PATH:${VAR_CROSS_BIN}
-PATH=$PATH:${MOD_CODE_DIR}/u-boot/tools
-export PATH
 
 function do_prepare()
 {
@@ -169,25 +166,25 @@ compile_code()
     bash busybox-build.sh
 }
 
-compile_gather()
+compile_out()
 {
-    local _gtr_dir="${TOP_DIR}/gather"
+    local _out_dir="${TOP_DIR}/out"
     local _code_dir=$MOD_CODE_DIR
     local _plt_fllname="$VAR_PLAT_FULLNAME"
 
-    [ -e ${_gtr_dir} ] && rm -rf ${_gtr_dir}
-    mkdir -p ${_gtr_dir}/u-boot
-    mkdir -p ${_gtr_dir}/boot
+    [ -e ${_out_dir} ] && rm -rf ${_out_dir}
+    mkdir -p ${_out_dir}/u-boot
+    mkdir -p ${_out_dir}/boot
 
     pushd ${_code_dir}
-        cp -f u-boot/u-boot-sunxi-with-spl.bin ${_gtr_dir}/u-boot/
-        cp -f kernel/arch/arm64/boot/Image ${_gtr_dir}/boot/
-        cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_gtr_dir}/boot/
-        cp -f busybox/rootfs.gz ${_gtr_dir}/
+        cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
+        cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
+        cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
+        cp -f busybox/rootfs.gz ${_out_dir}/
     popd
 
-    cp -f boot.cmd ${_gtr_dir}/boot/
-    mkimage -C none -A arm -T script -d ${_gtr_dir}/boot/boot.cmd ${_gtr_dir}/boot/boot.scr
+    cp -f boot.cmd ${_out_dir}/boot/
+    mkimage -C none -A arm -T script -d ${_out_dir}/boot/boot.cmd ${_out_dir}/boot/boot.scr
 }
 
 do_compile()
@@ -198,7 +195,7 @@ do_compile()
     compile_code
     [ $? != 0 ] && return 1
 
-    compile_gather
+    compile_out
     [ $? != 0 ] && return 1
 }
 

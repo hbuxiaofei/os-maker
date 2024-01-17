@@ -7,7 +7,9 @@ MOD_CODE_DIR="${TOP_DIR}/.mod-code"
 
 NR_CPU=`grep -c ^processor /proc/cpuinfo 2>/dev/null`
 
-VAR_CROSS_COMPILE="aarch64-none-linux-gnu-"
+VAR_CROSS_NAME=${G_CROSS_NAME}
+VAR_CROSS_COMPILE="${G_CROSS_NAME}-"
+VAR_CROSS_DIR=${G_CROSS_DIR}
 
 pushd ${MOD_CODE_DIR}/busybox
 
@@ -26,9 +28,13 @@ popd
 
 pushd ${MOD_CODE_DIR}/busybox/rootfs
 
-    mkdir -p {boot,lib64,etc/init.d,dev,proc,sys,tmp}
+    mkdir -p {boot,lib,lib64,etc/init.d,dev,proc,sys,tmp}
+
     cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/
+    cp ${VAR_CROSS_DIR}/${VAR_CROSS_NAME}/libc/lib/* lib/
+    cp ${VAR_CROSS_DIR}/${VAR_CROSS_NAME}/libc/lib64/* lib64/
     rm -f linuxrc
+
     cat > etc/inittab <<EOF
 ::sysinit:/etc/init.d/rcS
 ttyS0::respawn:-/bin/sh

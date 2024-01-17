@@ -72,6 +72,24 @@ echo "[Info] args except: ARGS_EXP=$ARGS_EXP"
 
 cd $(dirname $0)
 
+TOP_DIR="${PWD}"
+
+G_CROSS_NAME="aarch64-none-linux-gnu"
+export G_CROSS_NAME
+
+G_CROSS_DIR="/usr/local/bin/gcc-arm-11.2-2022.02-x86_64-${G_CROSS_NAME}"
+export G_CROSS_DIR
+
+VAR_CROSS_DIR=${G_CROSS_DIR}
+VAR_CROSS_BIN="${VAR_CROSS_DIR}/bin"
+VAR_CROSS_COMPILE="${G_CROSS_NAME}-"
+
+MOD_CODE_DIR="${TOP_DIR}/third-party/.mod-code"
+
+PATH=$PATH:${VAR_CROSS_BIN}
+PATH=$PATH:${MOD_CODE_DIR}/u-boot/tools
+export PATH
+
 
 if [[ "$ARG_DISK_SIZE" =~ ^[0-9]+$ ]]; then
     if [ $ARG_DISK_SIZE -lt 50 ]; then
@@ -88,7 +106,7 @@ do_disk()
     local _disk_name="${PWD}/$ARG_DISK_NAME"
     local _disk_mnt="${_disk_name}.mnt"
     local _disk_size="$ARG_DISK_SIZE"
-    local _gtr_dir="${PWD}/third-party/gather"
+    local _out_3rd="${PWD}/third-party/out"
 
     local _boot_start=40960                         # 跳过前 20M
     local _boot_end="$(expr ${_disk_size} \* 1024)" # 磁盘一半位置
@@ -99,8 +117,8 @@ do_disk()
     [ -e ${_disk_name} ] && rm -rf ${_disk_name}
     dd if=/dev/zero of=${_disk_name} bs=1M count=${_disk_size}
 
-    if [ -e ${_gtr_dir}/u-boot/u-boot-sunxi-with-spl.bin ]; then
-        dd if=${_gtr_dir}/u-boot/u-boot-sunxi-with-spl.bin of=${_disk_name} bs=1k seek=8 conv=notrunc
+    if [ -e ${_out_3rd}/u-boot/u-boot-sunxi-with-spl.bin ]; then
+        dd if=${_out_3rd}/u-boot/u-boot-sunxi-with-spl.bin of=${_disk_name} bs=1k seek=8 conv=notrunc
     fi
 
     fdisk ${_disk_name} << EOF
@@ -129,13 +147,13 @@ EOF
 
     mkfs.fat /dev/loop1p1
     mount /dev/loop1p1 ${_disk_mnt}
-    [ -d ${_gtr_dir}/boot ] && cp -rf ${_gtr_dir}/boot/* ${_disk_mnt}/
+    [ -d ${_out_3rd}/boot ] && cp -rf ${_out_3rd}/boot/* ${_disk_mnt}/
     umount /dev/loop1p1
 
     mkfs.ext4 -F /dev/loop1p2
     mount /dev/loop1p2 ${_disk_mnt}
-    if [ -e ${_gtr_dir}/rootfs.gz ]; then
-        cp -rf ${_gtr_dir}/rootfs.gz ${_disk_mnt}/
+    if [ -e ${_out_3rd}/rootfs.gz ]; then
+        cp -rf ${_out_3rd}/rootfs.gz ${_disk_mnt}/
         pushd ${_disk_mnt}
             gunzip rootfs.gz
             cpio -mdiv < rootfs

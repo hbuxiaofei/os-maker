@@ -2,10 +2,14 @@
 
 cd $(dirname $0)
 
+TOP_DIR="${PWD}"
+MOD_CODE_DIR="${TOP_DIR}/.mod-code"
+
 NR_CPU=`grep -c ^processor /proc/cpuinfo 2>/dev/null`
+
 VAR_CROSS_COMPILE="aarch64-none-linux-gnu-"
 
-pushd busybox
+pushd ${MOD_CODE_DIR}/busybox
 
     [ ! -d _install ] && \
         make CROSS_COMPILE=${VAR_CROSS_COMPILE} -j $NR_CPU && \
@@ -20,7 +24,7 @@ pushd busybox
 popd
 
 
-pushd busybox/rootfs
+pushd ${MOD_CODE_DIR}/busybox/rootfs
 
     mkdir -p {boot,lib64,etc/init.d,dev,proc,sys,tmp}
     cp -a /dev/{null,console,tty,tty1,tty2,tty3,tty4} dev/

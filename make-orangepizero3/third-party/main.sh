@@ -54,7 +54,9 @@ echo "[Info] args except: ARGS_EXP=$ARGS_EXP"
 
 cd $(dirname $0)
 
-MOD_CODE_DIR="${PWD}/.mod-code"
+TOP_DIR="${PWD}"
+MOD_CODE_DIR="${TOP_DIR}/.mod-code"
+
 VAR_CROSS_COMPILE="aarch64-none-linux-gnu-"
 VAR_CROSS_BIN="/usr/local/bin/gcc-arm-11.2-2022.02-x86_64-aarch64-none-linux-gnu/bin"
 VAR_PLAT="sun50i_h616"
@@ -109,29 +111,29 @@ compile_check()
     pushd $_mod_code_dir
         if [ ! -d arm-trusted-firmware ]; then
             echo "[Err] arm-trusted-firmware not found"
-            return 1
+            exit 1
         fi
 
         if [ ! -d u-boot ]; then
             echo "[Err] u-boot not found"
-            return 1
+            exit 1
         fi
 
         if [ ! -d kernel ]; then
             echo "[Err] kernel not found"
-            return 1
+            exit 1
         fi
 
         if [ ! -d busybox ]; then
             echo "[Err] busybox not found"
-            return 1
+            exit 1
         fi
-        return 0
     popd
 }
 
 compile_code()
 {
+    local _top_dir=$TOP_DIR
     local _code_dir=$MOD_CODE_DIR
     local _compiler_prefix="$VAR_CROSS_COMPILE"
     local _plat="$VAR_PLAT"
@@ -144,7 +146,7 @@ compile_code()
         popd
 
         # make ARCH=arm CROSS_COMPILE=aarch64-none-linux-gnu- orangepi_zero3_defconfig
-        [ ! -e u-boot/.config ] && cp -f uboot.config u-boot/.config
+        [ ! -e u-boot/.config ] && cp -f ${_top_dir}/uboot.config u-boot/.config
         pushd u-boot
             [ ! -e u-boot-sunxi-with-spl.bin ] && \
                make ARCH=arm CROSS_COMPILE="$_compiler_prefix" BL31=../arm-trusted-firmware/build/${_plat}/debug/bl31.bin -j ${NR_CPU}
@@ -152,7 +154,7 @@ compile_code()
 
 	# orangepi-build/external/config/kernel/linux-6.1-sun50iw9-next.config
 	# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
-        [ ! -e kernel/.config ] && cp -f kernel.config kernel/.config
+        [ ! -e kernel/.config ] && cp -f ${_top_dir}/kernel.config kernel/.config
         pushd kernel
             [ ! -e arch/arm64/boot/Image ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
@@ -161,27 +163,28 @@ compile_code()
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" dtbs -j ${NR_CPU}
         popd
 
-        [ ! -e busybox/.config ] && cp -f busybox.config busybox/.config
-        bash busybox-build.sh
-
     popd
 
-    return 0
+    [ ! -e ${_code_dir}/busybox/.config ] && cp -f ${_top_dir}/busybox.config  ${_code_dir}/busybox/.config
+    bash busybox-build.sh
 }
 
 compile_gather()
 {
-    local _gtr_dir="${PWD}/gather"
+    local _gtr_dir="${TOP_DIR}/gather"
+    local _code_dir=$MOD_CODE_DIR
     local _plt_fllname="$VAR_PLAT_FULLNAME"
 
     [ -e ${_gtr_dir} ] && rm -rf ${_gtr_dir}
     mkdir -p ${_gtr_dir}/u-boot
     mkdir -p ${_gtr_dir}/boot
 
-    cp -f u-boot/u-boot-sunxi-with-spl.bin ${_gtr_dir}/u-boot/
-    cp -f kernel/arch/arm64/boot/Image ${_gtr_dir}/boot/
-    cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_gtr_dir}/boot/
-    cp -f busybox/rootfs.gz ${_gtr_dir}/
+    pushd ${_code_dir}
+        cp -f u-boot/u-boot-sunxi-with-spl.bin ${_gtr_dir}/u-boot/
+        cp -f kernel/arch/arm64/boot/Image ${_gtr_dir}/boot/
+        cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_gtr_dir}/boot/
+        cp -f busybox/rootfs.gz ${_gtr_dir}/
+    popd
 
     cp -f boot.cmd ${_gtr_dir}/boot/
     mkimage -C none -A arm -T script -d ${_gtr_dir}/boot/boot.cmd ${_gtr_dir}/boot/boot.scr

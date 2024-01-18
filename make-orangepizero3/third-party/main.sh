@@ -149,15 +149,17 @@ compile_code()
                make ARCH=arm CROSS_COMPILE="$_compiler_prefix" BL31=../arm-trusted-firmware/build/${_plat}/debug/bl31.bin -j ${NR_CPU}
         popd
 
-	# orangepi-build/external/config/kernel/linux-6.1-sun50iw9-next.config
-	# make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
+	    # orangepi-build/external/config/kernel/linux-6.1-sun50iw9-next.config
+        # make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
         [ ! -e kernel/.config ] && cp -f ${_top_dir}/kernel.config kernel/.config
         pushd kernel
+            sed -i "s/scm:++/scm:+/g" scripts/setlocalversion
             [ ! -e arch/arm64/boot/Image ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
 
             [ ! -e arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" dtbs -j ${NR_CPU}
+            sed -i "s/scm:+/scm:++/g" scripts/setlocalversion
         popd
 
     popd

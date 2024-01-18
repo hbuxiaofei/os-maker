@@ -101,6 +101,17 @@ else
     exit 1
 fi
 
+tools_install()
+{
+    local _ins_dir="$1"
+    local _tools_dir="${TOP_DIR}/tools"
+    local _ins_usr_bin="${_ins_dir}/usr/bin"
+
+    if [ -d ${_ins_usr_bin} ]; then
+        cp ${_tools_dir}/ldd ${_ins_usr_bin}/
+    fi
+}
+
 do_disk()
 {
     local _disk_name="${PWD}/$ARG_DISK_NAME"
@@ -160,6 +171,7 @@ EOF
             rm -f rootfs
         popd
     fi
+    tools_install "${_disk_mnt}"
     umount /dev/loop1p2
 
     [ -d ${_disk_mnt} ] && rm -rf ${_disk_mnt}

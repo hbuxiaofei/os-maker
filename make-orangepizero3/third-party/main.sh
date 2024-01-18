@@ -153,13 +153,14 @@ compile_code()
         # make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
         [ ! -e kernel/.config ] && cp -f ${_top_dir}/kernel.config kernel/.config
         pushd kernel
-            sed -i "s/scm:++/scm:+/g" scripts/setlocalversion
             [ ! -e arch/arm64/boot/Image ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
 
             [ ! -e arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" dtbs -j ${NR_CPU}
-            sed -i "s/scm:+/scm:++/g" scripts/setlocalversion
+
+            [ ! -e Module.symvers ] && \
+                make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" modules -j ${NR_CPU}
         popd
 
     popd
@@ -180,9 +181,10 @@ compile_out()
 
     pushd ${_code_dir}
         cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
+        cp -f kernel/Module.symvers ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
-        cp -f busybox/rootfs.gz ${_out_dir}/
+        cp -f busybox/busybox.gz ${_out_dir}/
     popd
 
     cp -f boot.cmd ${_out_dir}/boot/
@@ -192,13 +194,10 @@ compile_out()
 do_compile()
 {
     compile_check
-    [ $? != 0 ] && return 1
 
     compile_code
-    [ $? != 0 ] && return 1
 
     compile_out
-    [ $? != 0 ] && return 1
 }
 
 if [ "X$ARGS_EXP" == "Xprepare" ]; then

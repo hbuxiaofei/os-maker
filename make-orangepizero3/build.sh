@@ -108,8 +108,26 @@ tools_install()
     local _ins_usr_bin="${_ins_dir}/usr/bin"
 
     if [ -d ${_ins_usr_bin} ]; then
-        cp ${_tools_dir}/ldd ${_ins_usr_bin}/
+        cp -f ${_tools_dir}/ldd ${_ins_usr_bin}/
     fi
+}
+
+drivers_compile()
+{
+    make all-drivers
+}
+
+drivers_install()
+{
+    local _disk_mnt="$1"
+    local _install_dir="$_disk_mnt/lib/modules/6.1.31+"
+    if [ -z "${_disk_mnt}" ] || [ ! -d ${_disk_mnt} ]; then
+        echo "[Err] disk rootfs($_disk_mnt) missing"
+        return 1
+    fi
+    [ ! -d ${_install_dir} ] && mkdir -p ${_install_dir}
+    find drivers -name "*.ko" | xargs -i cp -f --parents {} $_install_dir
+    find drivers -name "*-test" | xargs -i cp -f --parents {} $_install_dir
 }
 
 do_disk()
@@ -163,15 +181,17 @@ EOF
 
     mkfs.ext4 -F /dev/loop1p2
     mount /dev/loop1p2 ${_disk_mnt}
-    if [ -e ${_out_3rd}/rootfs.gz ]; then
-        cp -rf ${_out_3rd}/rootfs.gz ${_disk_mnt}/
+    if [ -e ${_out_3rd}/busybox.gz ]; then
+        cp -rf ${_out_3rd}/busybox.gz ${_disk_mnt}/
         pushd ${_disk_mnt}
-            gunzip rootfs.gz
-            cpio -mdiv < rootfs
-            rm -f rootfs
+            gunzip busybox.gz
+            cpio -mdiv < busybox
+            rm -f busybox
         popd
     fi
     tools_install "${_disk_mnt}"
+    drivers_install "${_disk_mnt}"
+
     umount /dev/loop1p2
 
     [ -d ${_disk_mnt} ] && rm -rf ${_disk_mnt}
@@ -188,7 +208,7 @@ do_all()
 if [ "X$ARGS_EXP" == "Xprepare" ]; then
     bash third-party/main.sh prepare
 elif [ "X$ARGS_EXP" == "Xcompile" ]; then
-    bash third-party/main.sh compile
+    bash third-party/main.sh compile && drivers_compile
 elif [ "X$ARGS_EXP" == "Xdisk" ]; then
     do_disk
 elif [ "X$ARGS_EXP" == "Xall" ]; then

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd $(dirname $0)
 
 TOP_DIR="${PWD}"
@@ -17,16 +19,18 @@ pushd ${MOD_CODE_DIR}/busybox
         make CROSS_COMPILE=${VAR_CROSS_COMPILE} -j $NR_CPU && \
         make install CROSS_COMPILE=${VAR_CROSS_COMPILE}
 
-    [ -d rootfs ] && rm -rf rootfs
-    [ -e rootfs.gz ] && rm -rf rootfs.gz
-    mkdir rootfs
+    if [ -L _install/linuxrc ]; then
+        [ -d busybox ] && rm -rf busybox
+        [ -e busybox.gz ] && rm -f busybox.gz
+        mkdir busybox
 
-    cp -rf _install/* rootfs/
+        cp -rf _install/* busybox/
+    fi
 
 popd
 
 
-pushd ${MOD_CODE_DIR}/busybox/rootfs
+pushd ${MOD_CODE_DIR}/busybox/busybox
 
     mkdir -p {boot,lib,lib64,etc/init.d,dev,proc,sys,tmp}
 
@@ -60,6 +64,7 @@ EOF
 mount -a
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
+# depmod -a
 if [ -e /dev/mmcblk0p1 ]; then
     mount /dev/mmcblk0p1 /boot
 elif [ -e /dev/mmcblk1p1 ]; then
@@ -67,11 +72,10 @@ elif [ -e /dev/mmcblk1p1 ]; then
 fi
 # echo /sbin/mdev > /proc/sys/kernel/hotplug
 /sbin/mdev -s
-# /usr/sbin/depmod -a
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
     chmod a+x etc/init.d/rcS
 
-    find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../rootfs.gz
+    find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../busybox.gz
 
 popd

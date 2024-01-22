@@ -57,6 +57,7 @@ cd $(dirname $0)
 TOP_DIR="${PWD}"
 MOD_CODE_DIR="${TOP_DIR}/.mod-code"
 
+VAR_CROSS_NAME="${G_CROSS_NAME}"
 VAR_CROSS_COMPILE="${G_CROSS_NAME}-"
 VAR_CROSS_DIR=${G_CROSS_DIR}
 VAR_CROSS_BIN="${VAR_CROSS_DIR}/bin"
@@ -86,6 +87,10 @@ function do_prepare()
 
         if [ ! -d busybox ]; then
             git clone https://github.com/mirror/busybox.git -b 1_35_0
+        fi
+
+        if [ ! -d lrzsz ]; then
+            git clone https://github.com/hbuxiaofei/lrzsz.git -b master
         fi
     popd
 }
@@ -125,6 +130,11 @@ compile_check()
             echo "[Err] busybox not found"
             exit 1
         fi
+
+        if [ ! -d lrzsz ]; then
+            echo "[Err] lrzsz not found"
+            exit 1
+        fi
     popd
 }
 
@@ -132,6 +142,7 @@ compile_code()
 {
     local _top_dir=$TOP_DIR
     local _code_dir=$MOD_CODE_DIR
+    local _compiler_name="$VAR_CROSS_NAME"
     local _compiler_prefix="$VAR_CROSS_COMPILE"
     local _plat="$VAR_PLAT"
     local _plt_fllname="$VAR_PLAT_FULLNAME"
@@ -163,6 +174,11 @@ compile_code()
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" modules -j ${NR_CPU}
         popd
 
+        pushd lrzsz
+            [ ! -e Makefile ] && ./configure --host=${_compiler_name}
+            [ ! -e src/lrz ] && make CC=${_compiler_name}-gcc -j ${NR_CPU}
+        popd
+
     popd
 
     [ ! -e ${_code_dir}/busybox/.config ] && cp -f ${_top_dir}/busybox.config  ${_code_dir}/busybox/.config
@@ -174,10 +190,12 @@ compile_out()
     local _out_dir="${TOP_DIR}/out"
     local _code_dir=$MOD_CODE_DIR
     local _plt_fllname="$VAR_PLAT_FULLNAME"
+    local _ins_usr_bin="${_out_dir}/rootfs/usr/bin"
 
     [ -e ${_out_dir} ] && rm -rf ${_out_dir}
     mkdir -p ${_out_dir}/u-boot
     mkdir -p ${_out_dir}/boot
+    mkdir -p ${_out_dir}/rootfs/usr/bin
 
     pushd ${_code_dir}
         cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
@@ -185,6 +203,8 @@ compile_out()
         cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
         cp -f busybox/busybox.gz ${_out_dir}/
+        cp -f lrzsz/src/lrz ${_ins_usr_bin}/
+        cp -f lrzsz/src/lsz ${_ins_usr_bin}/
     popd
 
     cp -f boot.cmd ${_out_dir}/boot/

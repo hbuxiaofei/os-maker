@@ -101,6 +101,13 @@ else
     exit 1
 fi
 
+third_install()
+{
+    local _ins_dir="$1"
+    local _out_3rd_usr="${PWD}/third-party/out/rootfs"
+    [ -d ${_out_3rd_usr} ] && cp -rf ${_out_3rd_usr}/* ${_ins_dir}/
+}
+
 tools_install()
 {
     local _ins_dir="$1"
@@ -189,6 +196,7 @@ EOF
             rm -f busybox
         popd
     fi
+    third_install "${_disk_mnt}"
     tools_install "${_disk_mnt}"
     drivers_install "${_disk_mnt}"
 

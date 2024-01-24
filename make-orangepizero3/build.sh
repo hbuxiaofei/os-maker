@@ -127,7 +127,8 @@ drivers_compile()
 drivers_install()
 {
     local _disk_mnt="$1"
-    local _install_dir="$_disk_mnt/lib/modules/6.1.31+"
+    local _kernel_dir="${MOD_CODE_DIR}/kernel"
+    local _install_dir="$_disk_mnt/lib/modules/6.1.31+/kernel"
     if [ -z "${_disk_mnt}" ] || [ ! -d ${_disk_mnt} ]; then
         echo "[Err] disk rootfs($_disk_mnt) missing"
         return 1
@@ -135,6 +136,10 @@ drivers_install()
     [ ! -d ${_install_dir} ] && mkdir -p ${_install_dir}
     find drivers -name "*.ko" | xargs -i cp -f --parents {} $_install_dir
     find drivers -name "*-test" | xargs -i cp -f --parents {} $_install_dir
+
+    pushd ${_kernel_dir}
+        find fs -name nls_iso8859-1.ko | xargs -i cp -f --parents {} $_install_dir
+    popd
 }
 
 do_disk()

@@ -92,6 +92,10 @@ function do_prepare()
         if [ ! -d lrzsz ]; then
             git clone https://github.com/hbuxiaofei/lrzsz.git -b master
         fi
+
+        if [ ! -d i2c-tools ]; then
+            git clone git@github.com:mozilla-b2g/i2c-tools.git
+        fi
     popd
 }
 
@@ -133,6 +137,11 @@ compile_check()
 
         if [ ! -d lrzsz ]; then
             echo "[Err] lrzsz not found"
+            exit 1
+        fi
+
+        if [ ! -d i2c-tools ]; then
+            echo "[Err] i2c-tools not found"
             exit 1
         fi
     popd
@@ -179,6 +188,10 @@ compile_code()
             [ ! -e src/lrz ] && make CC=${_compiler_name}-gcc -j ${NR_CPU}
         popd
 
+        pushd i2c-tools
+            [ ! -e lib/libi2c.so.0 ] && make CC=${_compiler_name}-gcc AR=${_compiler_name}-ar -j ${NR_CPU}
+        popd
+
     popd
 
     [ ! -e ${_code_dir}/busybox/.config ] && cp -f ${_top_dir}/busybox.config  ${_code_dir}/busybox/.config
@@ -191,20 +204,28 @@ compile_out()
     local _code_dir=$MOD_CODE_DIR
     local _plt_fllname="$VAR_PLAT_FULLNAME"
     local _ins_usr_bin="${_out_dir}/rootfs/usr/bin"
+    local _ins_lib64="${_out_dir}/rootfs/lib64"
 
     [ -e ${_out_dir} ] && rm -rf ${_out_dir}
     mkdir -p ${_out_dir}/u-boot
     mkdir -p ${_out_dir}/boot
-    mkdir -p ${_out_dir}/rootfs/usr/bin
+    mkdir -p ${_out_dir}/boot/overlays
+    mkdir -p ${_ins_usr_bin}
+    mkdir -p ${_ins_lib64}
 
     pushd ${_code_dir}
         cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
         cp -f kernel/Module.symvers ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
+        cp -f kernel/arch/arm64/boot/dts/allwinner/overlay/sun50i-h616-ph-i2c3.dtbo ${_out_dir}/boot/overlays/
         cp -f busybox/busybox.gz ${_out_dir}/
+
         cp -f lrzsz/src/lrz ${_ins_usr_bin}/
         cp -f lrzsz/src/lsz ${_ins_usr_bin}/
+
+        cp -f i2c-tools/lib/libi2c.so.0 ${_ins_lib64}/
+        cp -f i2c-tools/tools/i2cdetect ${_ins_usr_bin}/
     popd
 
     cp -f boot.cmd ${_out_dir}/boot/

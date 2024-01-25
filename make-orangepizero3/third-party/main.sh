@@ -226,6 +226,9 @@ compile_out()
 
         cp -f i2c-tools/lib/libi2c.so.0 ${_ins_lib64}/
         cp -f i2c-tools/tools/i2cdetect ${_ins_usr_bin}/
+        cp -f i2c-tools/tools/i2cdump ${_ins_usr_bin}/
+        cp -f i2c-tools/tools/i2cset ${_ins_usr_bin}/
+        cp -f i2c-tools/tools/i2cget ${_ins_usr_bin}/
     popd
 
     cp -f boot.cmd ${_out_dir}/boot/

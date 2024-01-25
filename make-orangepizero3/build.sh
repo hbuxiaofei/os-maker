@@ -101,6 +101,22 @@ else
     exit 1
 fi
 
+tools_compile()
+{
+    make all-tools
+}
+
+drivers_compile()
+{
+    make all-drivers
+}
+
+do_compile()
+{
+    drivers_compile
+    tools_compile
+}
+
 third_install()
 {
     local _ins_dir="$1"
@@ -117,11 +133,6 @@ tools_install()
     if [ -d ${_ins_usr_bin} ]; then
         cp -f ${_tools_dir}/ldd ${_ins_usr_bin}/
     fi
-}
-
-drivers_compile()
-{
-    make all-drivers
 }
 
 drivers_install()
@@ -215,13 +226,14 @@ do_all()
 {
     bash third-party/main.sh prepare || exit 1
     bash third-party/main.sh compile || exit 1
+    do_compile || exit 1
     do_disk || exit 1
 }
 
 if [ "X$ARGS_EXP" == "Xprepare" ]; then
     bash third-party/main.sh prepare
 elif [ "X$ARGS_EXP" == "Xcompile" ]; then
-    bash third-party/main.sh compile && drivers_compile
+    bash third-party/main.sh compile && do_compile
 elif [ "X$ARGS_EXP" == "Xdisk" ]; then
     do_disk
 elif [ "X$ARGS_EXP" == "Xall" ]; then

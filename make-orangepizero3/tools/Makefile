@@ -1,5 +1,5 @@
 all:
-	echo "Ignore tools"
+	$(MAKE) -C gpio
 
 clean:
-	echo "Ignore tools clean"
+	$(MAKE) -C gpio clean

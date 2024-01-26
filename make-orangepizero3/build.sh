@@ -132,6 +132,7 @@ tools_install()
 
     if [ -d ${_ins_usr_bin} ]; then
         cp -f ${_tools_dir}/ldd ${_ins_usr_bin}/
+        cp -f ${_tools_dir}/gpio/gpio ${_ins_usr_bin}/
     fi
 }
 

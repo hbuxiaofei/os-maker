@@ -173,6 +173,12 @@ compile_code()
         # make ARCH=arm64 CROSS_COMPILE=aarch64-none-linux-gnu- menuconfig
         [ ! -e kernel/.config ] && cp -f ${_top_dir}/kernel.config kernel/.config
         pushd kernel
+            if [ -e "${_top_dir}/${_plt_fllname}.dts" ]; then
+                if ! cmp -s ${_top_dir}/${_plt_fllname}.dts arch/arm64/boot/dts/allwinner/${_plt_fllname}.dts; then
+                   cp -f ${_top_dir}/${_plt_fllname}.dts arch/arm64/boot/dts/allwinner/${_plt_fllname}.dts
+                fi
+            fi
+
             [ ! -e arch/arm64/boot/Image ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
 

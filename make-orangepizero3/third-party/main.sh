@@ -179,8 +179,8 @@ compile_code()
                 fi
             fi
 
-            [ ! -e vmlinux ] && \
-                make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" vmlinux -j ${NR_CPU}
+            [ ! -e arch/arm64/boot/Image ] && \
+                make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
 
             [ ! -e arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" dtbs -j ${NR_CPU}
@@ -224,7 +224,7 @@ compile_out()
     pushd ${_code_dir}
         cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
         cp -f kernel/Module.symvers ${_out_dir}/boot/
-        cp -f kernel/vmlinux ${_out_dir}/boot/
+        cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/overlay/sun50i-h616-ph-i2c3.dtbo ${_out_dir}/boot/overlays/
         cp -f busybox/busybox.gz ${_out_dir}/
@@ -243,8 +243,12 @@ compile_out()
         find fs -name nls_iso8859-1.ko | xargs -i cp -f --parents {} ${_ins_module}
     popd
 
+    mkimage -A arm64 -T kernel -C none -O linux -n "Linux kernel" \
+        -a 0x40200000 -e 0x40200000  \
+        -d ${_out_dir}/boot/Image ${_out_dir}/boot/uImage
+
     cp -f boot.cmd ${_out_dir}/boot/
-    mkimage -C none -A arm -T script -d ${_out_dir}/boot/boot.cmd ${_out_dir}/boot/boot.scr
+    mkimage -A arm64 -T script -C none -d ${_out_dir}/boot/boot.cmd ${_out_dir}/boot/boot.scr
 }
 
 do_compile()

@@ -197,13 +197,6 @@ EOF
     mkfs.fat /dev/loop1p1
     mount /dev/loop1p1 ${_disk_mnt}
     [ -d ${_out_3rd}/boot ] && cp -rf ${_out_3rd}/boot/* ${_disk_mnt}/
-    if [ -e ${_disk_mnt}/vmlinux ]; then
-        pushd ${_disk_mnt}
-            mkimage -A arm64 -O linux  -T kernel -C none -n "Linux kernel" -d vmlinux uImage
-        popd
-    else
-        echo "[Err] vmlinux not found"
-    fi
     umount /dev/loop1p1
 
     mkfs.ext4 -F /dev/loop1p2

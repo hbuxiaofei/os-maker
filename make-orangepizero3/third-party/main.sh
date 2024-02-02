@@ -179,8 +179,8 @@ compile_code()
                 fi
             fi
 
-            [ ! -e arch/arm64/boot/Image ] && \
-                make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" Image -j ${NR_CPU}
+            [ ! -e vmlinux ] && \
+                make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" vmlinux -j ${NR_CPU}
 
             [ ! -e arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ] && \
                 make ARCH=arm64 CROSS_COMPILE="$_compiler_prefix" dtbs -j ${NR_CPU}
@@ -211,6 +211,7 @@ compile_out()
     local _plt_fllname="$VAR_PLAT_FULLNAME"
     local _ins_usr_bin="${_out_dir}/rootfs/usr/bin"
     local _ins_lib64="${_out_dir}/rootfs/lib64"
+    local _ins_module="${_out_dir}/rootfs/lib/modules/6.1.31+/kernel"
 
     [ -e ${_out_dir} ] && rm -rf ${_out_dir}
     mkdir -p ${_out_dir}/u-boot
@@ -218,11 +219,12 @@ compile_out()
     mkdir -p ${_out_dir}/boot/overlays
     mkdir -p ${_ins_usr_bin}
     mkdir -p ${_ins_lib64}
+    mkdir -p ${_ins_module}
 
     pushd ${_code_dir}
         cp -f u-boot/u-boot-sunxi-with-spl.bin ${_out_dir}/u-boot/
         cp -f kernel/Module.symvers ${_out_dir}/boot/
-        cp -f kernel/arch/arm64/boot/Image ${_out_dir}/boot/
+        cp -f kernel/vmlinux ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/${_plt_fllname}.dtb ${_out_dir}/boot/
         cp -f kernel/arch/arm64/boot/dts/allwinner/overlay/sun50i-h616-ph-i2c3.dtbo ${_out_dir}/boot/overlays/
         cp -f busybox/busybox.gz ${_out_dir}/
@@ -235,6 +237,10 @@ compile_out()
         cp -f i2c-tools/tools/i2cdump ${_ins_usr_bin}/
         cp -f i2c-tools/tools/i2cset ${_ins_usr_bin}/
         cp -f i2c-tools/tools/i2cget ${_ins_usr_bin}/
+    popd
+
+    pushd ${_code_dir}/kernel
+        find fs -name nls_iso8859-1.ko | xargs -i cp -f --parents {} ${_ins_module}
     popd
 
     cp -f boot.cmd ${_out_dir}/boot/

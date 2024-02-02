@@ -148,10 +148,6 @@ drivers_install()
     [ ! -d ${_install_dir} ] && mkdir -p ${_install_dir}
     find drivers -name "*.ko" | xargs -i cp -f --parents {} $_install_dir
     find drivers -name "*-test" | xargs -i cp -f --parents {} $_install_dir
-
-    pushd ${_kernel_dir}
-        find fs -name nls_iso8859-1.ko | xargs -i cp -f --parents {} $_install_dir
-    popd
 }
 
 do_disk()
@@ -201,6 +197,13 @@ EOF
     mkfs.fat /dev/loop1p1
     mount /dev/loop1p1 ${_disk_mnt}
     [ -d ${_out_3rd}/boot ] && cp -rf ${_out_3rd}/boot/* ${_disk_mnt}/
+    if [ -e ${_disk_mnt}/vmlinux ]; then
+        pushd ${_disk_mnt}
+            mkimage -A arm64 -O linux  -T kernel -C none -n "Linux kernel" -d vmlinux uImage
+        popd
+    else
+        echo "[Err] vmlinux not found"
+    fi
     umount /dev/loop1p1
 
     mkfs.ext4 -F /dev/loop1p2

@@ -164,6 +164,7 @@ function install_bin()
 /lib64/libmpfr.so.4
 /lib64/libmpc.so.3
 /lib64/libacl.so.1
+/lib64/libsmartcols.so.1
 /usr/lib64/libmagic.so.1
 /usr/lib64/libdl.so.2
 
@@ -186,6 +187,8 @@ function install_bin()
 /usr/bin/nvim
 /usr/bin/ctags
 /usr/bin/rsync
+/usr/bin/dmesg
+/usr/bin/lscpu
 
 /usr/include/stdc-predef.h
 
@@ -300,6 +303,7 @@ modprobe e1000
 udhcpc
 telnetd
 rsync --daemon
+ln -sf /usr/bin/dmesg /bin/dmesg
 exec /etc/init.d/rc S
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF

@@ -183,7 +183,6 @@ function install_bin()
 /usr/bin/nasm
 /usr/bin/ndisasm
 /usr/bin/make
-/usr/bin/nvim
 /usr/bin/ctags
 /usr/bin/rsync
 /usr/bin/dmesg
@@ -193,11 +192,6 @@ function install_bin()
 
 /usr/share/misc/magic
 /usr/share/misc/magic.mgc
-
-/usr/share/nvim/runtime/syntax/syntax.vim
-/usr/share/nvim/runtime/syntax/asm.vim
-/usr/share/nvim/runtime/filetype.vim
-/usr/share/nvim/runtime/autoload/dist/ft.vim
 EOF
         cc1_path=$(ls /usr/libexec/gcc/x86_64-redhat-linux/*/cc1 2>/dev/null | tail -n1)
         if [ -n "$cc1_path" ]; then
@@ -310,7 +304,6 @@ modprobe e1000
 udhcpc
 telnetd
 rsync --daemon
-ln -sf /usr/bin/dmesg /bin/dmesg
 exec /etc/init.d/rc S
 echo -e "\n\t\tWelcome to Cute Linux !\n"
 EOF
@@ -331,30 +324,10 @@ if [ -d /etc/rc\$runlevel.d ]; then
 fi
 EOF
         chmod a+x etc/init.d/rc
-        cat > etc/rcS.d/S30nvim <<EOF
+        cat > etc/rcS.d/S30custom <<EOF
 #!/bin/sh
-nvim_bin=\`which nvim 2>/dev/null\`
-[ -z "\$nvim_bin" ] && exit 0
-ln -s \$nvim_bin /usr/bin/vim
-mkdir -p /.config/nvim
 
-echo "syntax on
-set number
-set hlsearch
-set ignorecase
-set smartindent
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
-set expandtab
-set colorcolumn=81
-hi ColorColumn ctermbg=darkgrey guibg=darkgrey
-set scrolloff=5
-set sidescrolloff=15
-set laststatus=2
-set encoding=utf-8
-set fileencoding=utf-8
-set completeopt=menu" > /.config/nvim/init.vim
+ln -sf /usr/bin/dmesg /bin/dmesg
 
 EOF
         find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../rootfs.gz

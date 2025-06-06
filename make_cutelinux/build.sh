@@ -211,6 +211,7 @@ function do_mkcute()
     local _iso_name=$1
     local _mod_code_dir=$MOD_CODE_DIR
     local _kernel_version="xxx"
+    local _need_build_kernel=0
 
     make_prepare
 
@@ -232,9 +233,14 @@ function do_mkcute()
 
     [ ! -e $_mod_code_dir/kernel/.config ] && cp -f kernel3.10.config $_mod_code_dir/kernel/.config
     pushd $_mod_code_dir/kernel
-        [ ! -e vmlinux ] && LOCALVERSION= make -j $(nproc) vmlinux
-        [ ! -e modules.order ] && LOCALVERSION= make -j $(nproc) modules
-        [ ! -e arch/x86/boot/bzImage ] && LOCALVERSION= make -j $(nproc) bzImage
+        [ ! -e vmlinux ] && _need_build_kernel=1
+        [ ! -e modules.order ] && _need_build_kernel=1
+        [ ! -e arch/x86/boot/bzImage ] && _need_build_kernel=1
+        if [ ${_need_build_kernel} -eq 1 ]; then
+            LOCALVERSION= make -j $(nproc) vmlinux
+            LOCALVERSION= make -j $(nproc) modules
+            LOCALVERSION= make -j $(nproc) bzImage
+        fi
     popd
 
     _kernel_version=$(cat $_mod_code_dir/kernel/include/config/kernel.release 2> /dev/null)

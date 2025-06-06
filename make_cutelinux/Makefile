@@ -15,11 +15,11 @@ clean: clean-drivers clean-tools
 
 all-drivers:
 	$(MAKE) -C drivers
-	$(MAKE) -C $(KDIR) M=drivers/virtio modules
-	$(MAKE) -C $(KDIR) M=drivers/scsi modules
-	$(MAKE) -C $(KDIR) M=drivers/block modules
-	$(MAKE) -C $(KDIR) M=drivers/net modules
-	$(MAKE) -C $(KDIR) M=drivers/net/ethernet/intel/e1000 modules
+	# $(MAKE) -C $(KDIR) M=drivers/virtio modules
+	# $(MAKE) -C $(KDIR) M=drivers/scsi modules
+	# $(MAKE) -C $(KDIR) M=drivers/block modules
+	# $(MAKE) -C $(KDIR) M=drivers/net modules
+	# $(MAKE) -C $(KDIR) M=drivers/net/ethernet/intel/e1000 modules
 
 clean-drivers:
 	$(MAKE) -C drivers clean

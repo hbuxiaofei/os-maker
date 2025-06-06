@@ -3,7 +3,6 @@
 set -e
 
 EXEC_NAME="build.sh"
-NR_CPU=`grep -c ^processor /proc/cpuinfo 2>/dev/null`
 IN_ARGS=`getopt -o ho: --long help,out: -n 'build.sh' -- "$@"`
 GETOPT_RET=$?
 
@@ -100,12 +99,12 @@ function make_drivers()
         find drivers -name "e1000.ko" | xargs -i cp --parents {} $_install_dir
     popd
 
-    # pushd $_mod_code_dir/kernel
-    #   [ -e modules.builtin ] && cp -f modules.builtin ${_kernel_dir}/
-    #   [ -e modules.order ] && cp -f modules.order ${_kernel_dir}/
-    #   [ -e Module.symvers ] && cp -f Module.symvers ${_kernel_dir}/
-    #   [ -e System.map ] && cp -f System.map ${_kernel_dir}/
-    # popd
+    pushd $_mod_code_dir/kernel
+       [ -e modules.builtin ] && cp -f modules.builtin ${_kernel_dir}/
+       [ -e modules.order ] && cp -f modules.order ${_kernel_dir}/
+       [ -e Module.symvers ] && cp -f Module.symvers ${_kernel_dir}/
+       [ -e System.map ] && cp -f System.map ${_kernel_dir}/
+     popd
 }
 
 function make_tools()
@@ -216,12 +215,12 @@ function do_mkcute()
     make_prepare
 
     pushd $_mod_code_dir/syslinux
-        [ ! -e bios/com32/menu/vesamenu.c32 ] && make -j $NR_CPU bios
+        [ ! -e bios/com32/menu/vesamenu.c32 ] && make -j $(nproc) bios
     popd
 
     [ ! -e $_mod_code_dir/busybox/.config ] && cp -f busybox.config $_mod_code_dir/busybox/.config
     pushd $_mod_code_dir/busybox
-        [ ! -d _install ] && make -j $NR_CPU && make install
+        [ ! -d _install ] && make -j $(nproc) && make install
     popd
 
     pushd $_mod_code_dir/busybox
@@ -233,7 +232,9 @@ function do_mkcute()
 
     [ ! -e $_mod_code_dir/kernel/.config ] && cp -f kernel3.10.config $_mod_code_dir/kernel/.config
     pushd $_mod_code_dir/kernel
-        [ ! -e arch/x86/boot/bzImage ] && LOCALVERSION= make -j $NR_CPU bzImage
+        [ ! -e vmlinux ] && LOCALVERSION= make -j $(nproc) vmlinux
+        [ ! -e modules.order ] && LOCALVERSION= make -j $(nproc) modules
+        [ ! -e arch/x86/boot/bzImage ] && LOCALVERSION= make -j $(nproc) bzImage
     popd
 
     _kernel_version=$(cat $_mod_code_dir/kernel/include/config/kernel.release 2> /dev/null)

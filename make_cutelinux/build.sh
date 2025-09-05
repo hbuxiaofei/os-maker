@@ -71,7 +71,7 @@ function make_prepare()
 
     pushd $_mod_code_dir
         if [ ! -d syslinux ]; then
-            git clone https://github.com/hbuxiaofei/syslinux.git
+            git clone https://github.com/hbuxiaofei/syslinux.git -b centos7
         fi
         if [ ! -d busybox ]; then
             git clone https://github.com/mirror/busybox.git -b 1_35_0

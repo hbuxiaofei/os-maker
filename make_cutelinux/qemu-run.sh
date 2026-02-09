@@ -10,16 +10,19 @@
 # --monitor stdio  : 开启qmp交互
 #
 
+
+# 同步本地 /tmp 目录到远程 (rsync端口号默认 873)
+# rsync -av /tmp rsync://127.0.0.1/share
+
 /usr/libexec/qemu-kvm \
     --enable-kvm \
     -smp 2 \
-    -m 2048 \
+    -m 512 \
     -kernel linux-iso/bzImage \
     -initrd linux-iso/rootfs.gz \
-    -drive file=/var/lib/libvirt/images/disk.qcow2,if=virtio,media=disk,cache=directsync,format=qcow2 \
     -append "nokaslr console=ttyS0" \
-    -net nic \
-    -net user,hostfwd=tcp::23-:23 \
+    -device e1000,netdev=network0 \
+    -netdev user,id=network0,hostfwd=tcp::23-:23,hostfwd=tcp::873-:873 \
     -monitor telnet:0.0.0.0:4321,server,nowait \
     -vnc :0 \
     -chardev stdio,id=char0,signal=off \

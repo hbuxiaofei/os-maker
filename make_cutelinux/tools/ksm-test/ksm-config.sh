@@ -18,6 +18,9 @@
 #
 #  当 pages_sharing 明显大于 pages_shared 时，说明合并正在生效。
 
+# 每十秒执行一次, 同步当前所有文件到远程 (rsync端口号默认 873)
+# watch -n 10 rsync -av ./ rsync://127.0.0.1/share
+
 echo 1 > /sys/kernel/mm/ksm/run
 
 watch -n 1 "cat /sys/kernel/mm/ksm/pages_shared /sys/kernel/mm/ksm/pages_sharing"

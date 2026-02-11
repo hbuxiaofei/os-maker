@@ -172,31 +172,14 @@ function install_bin()
 /bin/ldd
 /bin/lsblk
 /bin/bash
-/usr/bin/bash
 /usr/bin/file
-/usr/bin/gcc
-/usr/bin/ld
-/usr/bin/ar
-/usr/bin/as
-/usr/bin/objcopy
-/usr/bin/objdump
-/usr/bin/nasm
-/usr/bin/ndisasm
-/usr/bin/make
-/usr/bin/ctags
 /usr/bin/rsync
 /usr/bin/dmesg
 /usr/bin/lscpu
 
-/usr/include/stdc-predef.h
-
 /usr/share/misc/magic
 /usr/share/misc/magic.mgc
 EOF
-        cc1_path=$(ls /usr/libexec/gcc/x86_64-redhat-linux/*/cc1 2>/dev/null | tail -n1)
-        if [ -n "$cc1_path" ]; then
-            [ -e "$cc1_path" ] && cp -f $cc1_path usr/bin/cc1
-        fi
     popd
 }
 
@@ -250,7 +233,7 @@ function do_mkcute()
     make_tools "$_mod_code_dir/busybox/rootfs/usr/sbin"
 
     pushd $_mod_code_dir/busybox/rootfs
-        mkdir -p {etc/init.d,etc/rcS.d,etc/network,dev,proc,sys,tmp}
+        mkdir -p {etc/init.d,etc/rcS.d,etc/network,dev,proc,sys,tmp,mnt}
         mkdir -p usr/share/udhcpc
         cp $_mod_code_dir/busybox/examples/udhcp/simple.script usr/share/udhcpc/default.script
         chmod +x usr/share/udhcpc/default.script
@@ -345,7 +328,7 @@ timeout 50
 menu clear
 label Cute Linux
     kernel bzImage
-    append initrd=rootfs.gz quiet splash console=tty1
+    append initrd=rootfs.gz quiet splash nokaslr console=ttyS0
 EOF
 
     cp $_mod_code_dir/kernel/arch/x86/boot/bzImage linux-iso/

@@ -18,8 +18,23 @@
     --enable-kvm \
     -smp 2 \
     -m 512 \
-    -kernel linux-iso/bzImage \
-    -initrd linux-iso/rootfs.gz \
+    -boot d \
+    -cdrom out.iso \
+    -device e1000,netdev=network0 \
+    -netdev user,id=network0,hostfwd=tcp::23-:23,hostfwd=tcp::873-:873 \
+    -monitor telnet:0.0.0.0:4321,server,nowait \
+    -vnc :0 \
+    -chardev stdio,id=char0,signal=off \
+    -serial chardev:char0
+
+exit 0
+
+/usr/libexec/qemu-kvm \
+    --enable-kvm \
+    -smp 2 \
+    -m 512 \
+    -kernel .mod-code/kernel/arch/x86_64/boot/bzImage \
+    -initrd .mod-code/busybox/rootfs.gz \
     -append "nokaslr console=ttyS0" \
     -device e1000,netdev=network0 \
     -netdev user,id=network0,hostfwd=tcp::23-:23,hostfwd=tcp::873-:873 \
@@ -28,4 +43,4 @@
     -chardev stdio,id=char0,signal=off \
     -serial chardev:char0
 
-
+exit 0
